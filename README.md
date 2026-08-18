@@ -613,3 +613,72 @@ The dashboard provides two comprehensive views of the e-commerce analytics: **Ex
 **Tool:** Power BI Desktop  
 **Data Source:** UCI Online Retail (clean_sales.parquet)  
 **Analysis Period:** Dec 1, 2010 - Dec 9, 2011
+## 📊 Dashboard Visualizations
+
+Interactive dashboard visualizations showcasing key business insights from the e-commerce analytics platform.
+
+### Executive Overview Dashboard
+
+![Executive Overview](docs/images/dashboard_executive_overview.png)
+
+**Key Visuals:**
+- **KPI Cards:** Total Revenue (£10.6M), Total Orders (19,960), Avg Order Value (£533), Total Customers (4,338), Repeat Rate (65.58%)
+- **Monthly Revenue Trend:** Growth trajectory from Dec 2010 to Dec 2011, peaking at £1.5M in November 2011
+- **Top 10 Countries by Revenue:** Geographic distribution with UK leading at £9M (84.59%)
+- **Top 6 Products by Revenue:** Product performance analysis, DOTCOM POSTAGE leading at £206K
+- **Monthly Orders vs Revenue:** Dual-axis comparison of order volume and revenue trends
+
+### Customer Intelligence Dashboard
+
+![Customer Intelligence](docs/images/dashboard_customer_intelligence.png)
+
+**Key Visuals:**
+- **Customer KPIs:** Identified Customers (4,338), Repeat Customers (2,845), Repeat Rate (65.58%), Avg Revenue per Customer (£2,453)
+- **RFM Segments Distribution:** Customer segmentation across 8 behavioral clusters
+- **Revenue by RFM Segment:** Champions segment drives 64.61% of revenue (£5.74M)
+- **RFM Performance Matrix:** Comprehensive segment analysis with customer counts and revenue contribution
+- **Top 6 Customers:** Customer 14646 leads with £280K revenue across 526 orders
+
+### Dashboard Features
+
+**Data Architecture:**
+- Star schema data model with dimension tables (Date, Customer, Product, Country)
+- Time intelligence calculations for trend analysis
+- RFM segmentation algorithm for customer behavior analysis
+
+**Key Metrics:**
+- Revenue analytics: £10.6M total, £533 average order value
+- Customer retention: 65.58% repeat customer rate
+- Geographic insights: 38 countries, UK dominance at 84.59%
+- Product performance: 3,922 unique products, top item £206K revenue
+
+**Visual Analytics:**
+- Time-series trend analysis with seasonal patterns
+- Geographic revenue distribution mapping
+- Customer segmentation and behavioral clustering
+- Product performance ranking and comparison
+
+### Business Insights
+
+**Revenue Performance:**
+- Consistent growth from £150K (Dec 2010) to £1.5M (Nov 2011)
+- High average order value (£533) indicates B2B or bulk purchasing patterns
+- Shipping services (DOTCOM POSTAGE) represent significant revenue stream
+
+**Customer Behavior:**
+- Strong customer loyalty with 65.58% repeat purchase rate
+- Top 21.69% of customers (Champions) generate 64.61% of revenue
+- Clear opportunity for targeted retention campaigns
+
+**Strategic Opportunities:**
+1. **VIP Program:** Retain 941 Champion customers with exclusive benefits
+2. **Win-back Campaigns:** Re-engage 663 at-risk customers
+3. **International Expansion:** Scale successful UK model to Germany, France, Netherlands
+4. **Product Bundling:** Leverage top-performing products to increase AOV
+
+---
+
+**Dashboard Created:** 2026-08-18  
+**Data Source:** UCI Machine Learning Repository - Online Retail Dataset  
+**Analysis Period:** December 1, 2010 - December 9, 2011  
+**Total Records Analyzed:** 524,878 clean sales transactions
