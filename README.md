@@ -1,13 +1,9 @@
 # E-Commerce Customer & Sales Analytics
 
-An end-to-end data analytics portfolio project analyzing transactional e-commerce data to understand sales performance, customer behavior, product performance, geographic revenue, and customer value.
+A complete business analytics workflow analyzing invoice-level transactions from the UCI Online Retail dataset. This project connects technical implementation with business interpretation through reproducible Python pipelines, SQL analysis, and Power BI dashboards.
 
-[![Status](https://img.shields.io/badge/status-in%20progress-orange)](https://github.com/rai-ritik/ecommerce-customer-sales-analytics)
-[![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
-[![MySQL](https://img.shields.io/badge/MySQL-analysis-4479A1?logo=mysql&logoColor=white)](https://www.mysql.com/)
-[![Power%20BI](https://img.shields.io/badge/Power%20BI-dashboard-F2C811?logo=powerbi&logoColor=black)](https://powerbi.microsoft.com/)
-
-> **Current status:** The repository and raw dataset setup are complete. Data cleaning, SQL analysis, RFM segmentation, dashboard development, and final portfolio documentation are being completed phase by phase.
+[![GitHub](https://img.shields.io/badge/GitHub-Repository-blue)](https://github.com/rai-ritik/ecommerce-customer-sales-analytics)
+[![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
 
 ## Table of contents
 
@@ -19,9 +15,10 @@ An end-to-end data analytics portfolio project analyzing transactional e-commerc
 - [Repository structure](#repository-structure)
 - [Setup](#setup)
 - [Project workflow](#project-workflow)
-- [Planned dashboard](#planned-dashboard)
-- [Planned deliverables](#planned-deliverables)
+- [Completed deliverables](#completed-deliverables)
+- [Dashboard](#dashboard)
 - [Limitations](#limitations)
+- [Reproducibility principles](#reproducibility-principles)
 - [Attribution](#attribution)
 - [Author](#author)
 
@@ -47,25 +44,23 @@ Power BI dashboard
 Business insights and recommendations
 ```
 
-The final analysis will connect technical implementation with business interpretation. Each metric will have a clear definition, each transformation will be documented, and important results will be supported by reproducible queries or dashboard outputs.
+The final analysis connects technical implementation with business interpretation. Each metric has a clear definition, each transformation is documented, and important results are supported by reproducible queries or dashboard outputs.
 
 ## Business questions
 
-The analysis is designed to answer the following questions:
+The analysis addresses the following business questions:
 
-- How does revenue change over time?
-- Which countries generate the most revenue?
-- Which products contribute the most revenue and units sold?
-- Which customers generate the greatest monetary value?
-- What is the average order value?
-- How many customers make repeat purchases?
-- Which customers are champions, loyal, new, at risk, or lost?
-- How concentrated is revenue among products, countries, and customers?
-- What actions could improve retention and sales performance?
+1. **Sales performance**: What are the overall revenue, order volume, and unit sales?
+2. **Time trends**: How do sales vary by month, day of week, and hour?
+3. **Geographic analysis**: Which countries contribute most to revenue?
+4. **Product performance**: Which products drive the most revenue?
+5. **Customer behavior**: What is the distribution of repeat vs. one-time customers?
+6. **Customer value**: How is revenue distributed across customer segments (RFM)?
+7. **Actionable insights**: What business actions should be prioritized based on the data?
 
 ## Dataset
 
-The project uses the [Online Retail dataset from the UCI Machine Learning Repository](https://archive.ics.uci.edu/dataset/352/online+retail). The UCI source describes the dataset as transactional data from a UK-based, non-store online retailer covering **December 1, 2010 through December 9, 2011**. [web:28]
+The project uses the [Online Retail dataset from the UCI Machine Learning Repository](https://archive.ics.uci.edu/dataset/352/online+retail). The UCI source describes the dataset as transactional data from a UK-based, non-store online retailer covering **December 1, 2010 through December 9, 2011**.
 
 ### Dataset characteristics
 
@@ -74,141 +69,173 @@ The project uses the [Online Retail dataset from the UCI Machine Learning Reposi
 | Source | UCI Machine Learning Repository |
 | Original file | `Online Retail.xlsx` |
 | Local file | `data/raw/online_retail_raw.xlsx` |
-| Approximate raw size | 541,000 transaction lines |
+| Raw rows | 541,909 |
+| Clean sales rows | 524,878 |
 | Time period | December 2010 to December 2011 |
 | Data grain | One product line within an invoice |
 | Main geography | United Kingdom and other countries |
 
-The raw workbook is intentionally excluded from Git because it is a large binary file. Download instructions are available in [`data/README.md`](data/README.md).
-
 ### Source columns
 
-| Column | Description |
-|---|---|
-| `InvoiceNo` | Invoice or transaction identifier. Values beginning with `C` indicate cancellations. |
-| `StockCode` | Product identifier. |
-| `Description` | Product description. |
-| `Quantity` | Number of units in the transaction line. |
-| `InvoiceDate` | Date and time of the transaction. |
-| `UnitPrice` | Unit price in pounds sterling. |
-| `CustomerID` | Customer identifier; some records are missing this value. |
-| `Country` | Customer country. |
+| Column | Type | Description |
+|--------|------|-------------|
+| InvoiceNo | Text | Invoice identifier (6 characters, starts with C for cancellations) |
+| StockCode | Text | Product code (5 characters) |
+| Description | Text | Product name |
+| Quantity | Integer | Units per product line |
+| InvoiceDate | DateTime | Transaction date and time |
+| UnitPrice | Decimal | Price per unit |
+| CustomerID | Text | Customer identifier (7 characters, may be missing) |
+| Country | Text | Customer country name |
 
 ### Derived columns
 
-The processed dataset will include the following analytical fields:
+The cleaning pipeline adds the following derived columns:
 
-| Column | Definition |
-|---|---|
-| `revenue` | `quantity * unit_price` |
-| `year` | Calendar year extracted from `invoice_date` |
-| `month` | Calendar month extracted from `invoice_date` |
-| `year_month` | Year-month period for trend analysis |
-| `day_of_week` | Day of week extracted from `invoice_date` |
-| `is_cancelled` | Whether the invoice represents a cancellation |
-| `is_valid_sale` | Whether the row qualifies for the valid-sales analysis population |
+| Column | Type | Description |
+|--------|------|-------------|
+| revenue | Decimal | `quantity × unit_price` |
+| year | Integer | Calendar year |
+| month | Integer | Calendar month (1–12) |
+| day | Integer | Calendar day (1–31) |
+| hour | Integer | Hour of day (0–23) |
+| is_cancellation | Boolean | TRUE if InvoiceNo starts with "C" |
+| is_return | Boolean | TRUE if negative quantity or cancellation |
 
 ## Methodology
 
 ### Data validation and cleaning
 
-The data pipeline will:
+The cleaning pipeline (`python/clean_data.py`) performs:
 
-1. Load the raw Excel workbook.
-2. Standardize column names.
-3. Trim and normalize text fields.
-4. Convert quantity and unit price to numeric values.
-5. Parse invoice dates into a consistent datetime type.
-6. Identify cancellation invoices.
-7. Detect missing customer IDs and other missing values.
-8. Check duplicates and invalid numeric values.
-9. Calculate line-level revenue.
-10. Add calendar features for time analysis.
-11. Save a processed dataset and validation report.
+1. **Schema validation**: Verify 8 expected columns, check data types.
+2. **Duplicate removal**: Remove exact duplicate rows (5,268 found).
+3. **Cancellation handling**: Flag invoices starting with "C".
+4. **Return handling**: Flag negative quantities.
+5. **Revenue calculation**: Compute `quantity × unit_price`.
+6. **Calendar fields**: Extract year, month, day, hour from InvoiceDate.
+7. **Separation**: Split clean sales from returns/cancellations.
 
-Returns and cancellations will be handled explicitly. They will not be silently removed without being counted and documented. The project will distinguish between transaction-level records, valid positive sales, cancellations, and the final customer-analysis population.
+**Cleaning results:**
+
+| Metric | Value |
+|--------|-------|
+| Raw rows | 541,909 |
+| Exact duplicates removed | 5,268 |
+| Clean sales rows | 524,878 |
+| Returns/cancellations | 11,763 |
+| Missing CustomerIDs | 135,080 (25.6%) |
+| Distinct invoices | 19,960 |
+| Distinct products | 3,922 |
+| Countries | 38 |
 
 ### Sales analysis
 
-The analysis will calculate:
+The analysis computes:
 
-- Total revenue.
-- Total orders.
-- Units sold.
-- Unique customers.
-- Unique products.
-- Average order value.
-- Revenue by year and month.
-- Revenue by country.
-- Top products by revenue.
-- Top products by quantity.
-- Revenue concentration by customer.
-- Repeat-customer rate.
-
-The primary order definition will be the number of distinct invoices, while revenue will be calculated from line-level quantity multiplied by unit price.
+- **Overall KPIs**: Revenue, orders, units, customers, products, countries.
+- **Monthly trends**: Revenue, orders, units by month with MoM growth.
+- **Country analysis**: Revenue and share by country.
+- **Product analysis**: Revenue and units by product (top 20).
+- **Customer analysis**: Revenue and orders by customer (top 20).
 
 ### RFM segmentation
 
-Customer behavior will be summarized using RFM analysis:
+RFM analysis uses the following methodology:
 
-- **Recency:** number of days since the most recent purchase.
-- **Frequency:** number of distinct invoices.
-- **Monetary:** total revenue generated by the customer.
+- **Analysis date**: 2011-12-10 (one day after last transaction).
+- **Recency**: Days since last completed purchase.
+- **Frequency**: Number of distinct completed-sales invoices.
+- **Monetary**: Total completed-sales revenue.
+- **Scoring**: Quintiles (1–5) for each dimension.
+- **Composite score**: `r_score + f_score + m_score`.
+- **RFM code**: Three-character code (e.g., "555").
+- **Segments**: Champions, Loyal customers, At-risk, Cannot lose them, etc.
 
-The project will use documented score calculations and reproducible segment rules. Planned segments include:
+**RFM results:**
 
-- Champions.
-- Loyal customers.
-- New customers.
-- Potential loyalists.
-- At-risk customers.
-- Lost or low-value customers.
-
-RFM segments are analytical groupings for prioritization. They are not confirmed customer personas.
+| Segment | Customers | Share | Revenue | Share |
+|---------|-----------|-------|---------|-------|
+| Champions | 941 | 21.69% | £5,741,913.58 | 64.61% |
+| Loyal customers | 457 | 10.53% | £901,405.29 | 10.14% |
+| At-risk customers | 663 | 15.28% | £827,416.57 | 9.31% |
+| Other customers | 490 | 11.30% | £566,361.89 | 6.37% |
+| Cannot lose them | 248 | 5.72% | £334,793.25 | 3.77% |
+| Potential loyalists | 405 | 9.34% | £191,145.91 | 2.15% |
+| Lost or low-value | 824 | 18.99% | £188,415.28 | 2.12% |
+| New customers | 310 | 7.15% | £135,757.12 | 1.53% |
 
 ## Tools
 
-| Tool | Purpose |
-|---|---|
-| Python and pandas | Data inspection, cleaning, validation, and reproducible processing |
-| Excel | Exploratory analysis, pivot tables, and workbook-based reporting |
-| MySQL | KPI queries, business analysis, CTEs, joins, and window functions |
-| Power BI | Data modeling, DAX measures, interactive filtering, and dashboards |
-| Git and GitHub | Version control, documentation, and portfolio delivery |
+| Category | Tools |
+|----------|-------|
+| Programming | Python 3.10+, pandas, openpyxl |
+| Database | MySQL 8.0+ |
+| Spreadsheets | Microsoft Excel |
+| Visualization | Power BI Desktop |
+| Version control | Git, GitHub |
+| Environment | Python virtualenv, macOS Terminal |
 
 ## Repository structure
 
-```text
 ecommerce-customer-sales-analytics/
-├── README.md
-├── .gitignore
+├── README.md # This file
+├── LICENSE # MIT License
+├── .gitignore # Git ignore rules
 ├── data/
-│   ├── README.md
-│   ├── raw/
-│   │   ├── .gitkeep
-│   │   └── online_retail_raw.xlsx   # local only; ignored by Git
-│   └── processed/                    # generated outputs; ignored by Git
-├── sql/
-│   └── analysis.sql
-├── excel/
-│   └── screenshots/
-├── powerbi/
-│   └── screenshots/
+│ ├── raw/
+│ │ ├── .gitkeep
+│ │ └── online_retail_raw.xlsx # Raw dataset (ignored)
+│ └── processed/
+│ ├── .gitkeep
+│ ├── clean_sales.parquet # Cleaned sales (ignored)
+│ └── returns_cancellations.parquet # Returns/cancellations (ignored)
 ├── docs/
-└── assets/
-    └── images/
-```
-
-The repository will be expanded as the remaining phases are implemented.
+│ ├── README.md # Data documentation
+│ ├── business_insights.md # Evidence-based business findings
+│ ├── excel_analysis.md # Excel analysis guide
+│ ├── sales_profile.csv # Overall KPIs
+│ ├── monthly_sales.csv # Monthly trends
+│ ├── country_sales.csv # Country analysis
+│ ├── product_sales.csv # Product analysis
+│ ├── customer_sales.csv # Customer analysis
+│ ├── rfm_customers.csv # RFM customer scores
+│ └── rfm_segments.csv # RFM segment summary
+├── python/
+│ ├── clean_data.py # Data cleaning pipeline
+│ ├── profile_sales.py # KPI profile
+│ ├── monthly_sales.py # Monthly trends
+│ ├── country_sales.py # Country analysis
+│ ├── product_sales.py # Product analysis
+│ ├── customer_sales.py # Customer analysis
+│ ├── rfm_segmentation.py # RFM scoring
+│ └── rfm_summary.py # RFM segment summary
+├── sql/
+│ ├── README.md # SQL documentation
+│ ├── 01_create_database.sql # Create database
+│ ├── 02_create_tables.sql # Create tables
+│ ├── 03_import_data.sql # Import CSV data
+│ ├── 04_kpi_analysis.sql # Overall KPIs
+│ ├── 05_product_analysis.sql # Product analysis
+│ ├── 06_country_analysis.sql # Country analysis
+│ ├── 07_time_trends.sql # Time trends
+│ ├── 08_customer_analysis.sql # Customer analysis
+│ ├── 09_rfm_segmentation.sql # RFM segmentation
+│ └── 10_validation_checks.sql # Validation queries
+└── powerbi/
+├── README.md # Power BI documentation
+├── data_model.md # Data model and relationships
+└── dax_measures.md # DAX measures reference
 
 ## Setup
 
 ### Prerequisites
 
-- Python 3.10 or newer.
-- Git.
-- MySQL and MySQL Workbench, or another compatible MySQL client.
-- Power BI Desktop or Power BI Service for the dashboard phase.
+- Python 3.10 or later
+- Git
+- MySQL 8.0+ (optional, for SQL analysis)
+- Microsoft Excel (optional, for Excel analysis)
+- Power BI Desktop (optional, for dashboard)
 
 ### Clone the repository
 
@@ -228,125 +255,195 @@ python -m pip install pandas openpyxl
 
 ### Obtain the dataset
 
-Download the Online Retail workbook from the [UCI Machine Learning Repository](https://archive.ics.uci.edu/dataset/352/online+retail), then save it as:
-
-```text
-data/raw/online_retail_raw.xlsx
-```
-
-For example, after downloading the file to `~/Downloads`:
-
-```bash
-mkdir -p data/raw
-cp ~/Downloads/"Online Retail.xlsx" data/raw/online_retail_raw.xlsx
-```
+1. Download from [UCI Machine Learning Repository](https://archive.ics.uci.edu/dataset/352/online+retail).
+2. Save as `data/raw/online_retail_raw.xlsx`.
+3. The file is approximately 23 MB and is ignored by Git.
 
 ### Inspect the raw workbook
 
 ```bash
+source .venv/bin/activate
 python - <<'PY'
 import pandas as pd
 
-path = "data/raw/online_retail_raw.xlsx"
-df = pd.read_excel(path, engine="openpyxl")
-
+df = pd.read_excel("data/raw/online_retail_raw.xlsx", engine="openpyxl")
 print("Shape:", df.shape)
-print("Columns:", list(df.columns))
-print("Missing values:")
-print(df.isna().sum())
+print("\nColumns:", list(df.columns))
+print("\nMissing values:\n", df.isna().sum())
 PY
 ```
 
+Expected output:
+- Shape: (541909, 8)
+- Columns: InvoiceNo, StockCode, Description, Quantity, InvoiceDate, UnitPrice, CustomerID, Country
+- Missing values: CustomerID (~135k), Description (~1.5k)
+
 ## Project workflow
 
-The project is being completed incrementally on the `main` branch.
+The project follows a phased, reproducible workflow:
 
-- [x] Recreate the local repository.
-- [x] Create the project directory structure.
-- [x] Obtain the raw dataset locally.
-- [x] Document the dataset source and expected schema.
-- [x] Add Git ignore rules for local and generated files.
-- [ ] Inspect and validate the raw workbook.
-- [ ] Build the reproducible cleaning pipeline.
-- [ ] Generate the data-quality report.
-- [ ] Complete exploratory sales analysis.
-- [ ] Organize the SQL scripts into numbered analysis modules.
-- [ ] Add SQL validation checks.
-- [ ] Implement RFM customer segmentation.
-- [ ] Complete the Excel workbook.
-- [ ] Build the Power BI data model and dashboard.
-- [ ] Document DAX measures.
-- [ ] Add verified business insights and recommendations.
-- [ ] Add screenshots and finalize the portfolio case study.
+### Phase 1: Dataset inspection and documentation ✅
 
-## Planned dashboard
+- Inspect raw workbook schema and quality.
+- Document data dictionary and cleaning rules.
+- Create `data/README.md`.
+
+**Commit:** `995b54c` - docs: document dataset schema and cleaning rules
+
+### Phase 2: Reproducible cleaning pipeline ✅
+
+- Create `python/clean_data.py`.
+- Generate `clean_sales.parquet` and `returns_cancellations.parquet`.
+- Record validation metrics.
+
+**Commit:** `1b0c167` - feat: add reproducible retail data cleaning pipeline
+
+### Phase 3: Sales analysis ✅
+
+- Overall KPIs (`python/profile_sales.py`).
+- Monthly trends (`python/monthly_sales.py`).
+- Country analysis (`python/country_sales.py`).
+- Product analysis (`python/product_sales.py`).
+- Customer analysis (`python/customer_sales.py`).
+
+**Commits:** `432376c`, `58f5b69`, `529ad87`, `0e24cd0`, `ed5b505`
+
+### Phase 4: RFM segmentation ✅
+
+- RFM scoring (`python/rfm_segmentation.py`).
+- Segment summary (`python/rfm_summary.py`).
+
+**Commits:** `82acdd1`, `930d41e`
+
+### Phase 5: Documentation ✅
+
+- Business insights (`docs/business_insights.md`).
+- Excel analysis guide (`docs/excel_analysis.md`).
+- SQL analysis pipeline (`sql/` directory).
+- Power BI documentation (`powerbi/` directory).
+
+**Commits:** `83fa411`, `e569b81`, `7530f9d`, `1223b8d`
+
+## Completed deliverables
+
+### Documentation
+
+- ✅ `docs/README.md` - Data documentation and schema
+- ✅ `docs/business_insights.md` - Evidence-based business findings
+- ✅ `docs/excel_analysis.md` - Excel analysis guide
+- ✅ `sql/README.md` - SQL analysis documentation
+- ✅ `powerbi/data_model.md` - Power BI data model
+- ✅ `powerbi/dax_measures.md` - DAX measures reference
+
+### Analysis outputs
+
+- ✅ `docs/sales_profile.csv` - Overall KPIs
+- ✅ `docs/monthly_sales.csv` - Monthly trends (13 months)
+- ✅ `docs/country_sales.csv` - Country analysis (38 countries)
+- ✅ `docs/product_sales.csv` - Product analysis (3,922 products)
+- ✅ `docs/customer_sales.csv` - Customer analysis (4,338 customers)
+- ✅ `docs/rfm_customers.csv` - RFM customer scores
+- ✅ `docs/rfm_segments.csv` - RFM segment summary
+
+### SQL pipeline
+
+- ✅ `sql/01_create_database.sql` - Create database
+- ✅ `sql/02_create_tables.sql` - Create tables (clean_sales, returns_cancellations, rfm_customers)
+- ✅ `sql/03_import_data.sql` - Import CSV data
+- ✅ `sql/04_kpi_analysis.sql` - Overall KPIs
+- ✅ `sql/05_product_analysis.sql` - Product analysis
+- ✅ `sql/06_country_analysis.sql` - Country analysis
+- ✅ `sql/07_time_trends.sql` - Time trends
+- ✅ `sql/08_customer_analysis.sql` - Customer analysis
+- ✅ `sql/09_rfm_segmentation.sql` - RFM segmentation
+- ✅ `sql/10_validation_checks.sql` - Validation queries
+
+### Key findings
+
+- **Total revenue**: £10,642,110.80
+- **Total orders**: 19,960
+- **Total units sold**: 5,572,420
+- **Identified customers**: 4,338 (2,845 repeat, 1,493 one-time)
+- **Unique products**: 3,922
+- **Countries**: 38 (UK = 84.59% of revenue)
+- **Strongest month**: November 2011 (£1,503,866.78)
+- **Top customer**: 14646 (£280,206.02)
+- **Top product**: DOTCOM POSTAGE (£206,248.77)
+- **Champions**: 21.69% of customers, 64.61% of revenue
+
+## Dashboard
+
+The Power BI dashboard (planned) will include two pages:
 
 ### Executive overview
 
-The executive page will include:
-
-- Revenue, orders, customers, units sold, and average-order-value KPIs.
-- Monthly revenue trend.
-- Revenue by country.
-- Top products by revenue.
-- Date and country filters.
+- Revenue KPI card
+- Orders KPI card
+- Customers KPI card
+- Average order value
+- Monthly revenue trend (line chart)
+- Revenue by country (bar chart, top 10)
+- Top products (bar chart, top 20)
+- Slicers: Date range, Country
 
 ### Customer intelligence
 
-The customer page will include:
-
-- RFM-segment distribution.
-- Revenue by segment.
-- Top customers.
-- Repeat versus one-time customers.
-- Retention or cohort analysis.
-- Customer-level detail table.
-
-Dashboard screenshots, model documentation, and DAX measures will be added under [`powerbi/`](powerbi/) after implementation.
-
-## Planned deliverables
-
-- Reproducible data-cleaning pipeline.
-- Processed analysis dataset.
-- Data-quality validation report.
-- Data dictionary and methodology documentation.
-- MySQL schema and import instructions.
-- KPI, product, country, trend, and customer SQL analyses.
-- RFM segmentation output.
-- Excel analysis workbook.
-- Power BI dashboard.
-- DAX measure documentation.
-- Business insights and recommendations.
-- Portfolio case study.
+- RFM segment distribution (donut chart)
+- Revenue by RFM segment (bar chart)
+- Top customers (table, top 20)
+- Repeat vs one-time customers (pie chart)
+- Customer detail table (customer_id, orders, revenue, segment)
+- Retention/cohort analysis (matrix)
 
 ## Limitations
 
-- The dataset contains historical transactions from 2010–2011 rather than current business activity.
-- It does not include website sessions, marketing attribution, inventory levels, product cost, profit, or detailed customer demographics.
-- Missing customer IDs limit customer-level and RFM analysis for some transactions.
-- Treatment of cancellations and returns can change the reported totals, so the chosen rules will be documented.
-- Revenue is transaction value, not profit.
-- RFM segments are analytical classifications and should be validated before being used for marketing decisions.
-- Power BI files may require compatible Microsoft tooling to open and edit.
+1. **Partial December 2011**: Data ends December 9, 2011. December metrics are incomplete.
+2. **Missing CustomerIDs**: 135,080 rows (25.6%) lack CustomerID, excluding them from customer and RFM analysis.
+3. **Single-year snapshot**: Analysis covers only 12 months; seasonal patterns beyond this period are unknown.
+4. **UK concentration**: 84.59% of revenue is from the UK; insights may not generalize to other markets.
+5. **No external context**: No marketing spend, pricing changes, or competitive data to explain trends.
+6. **RFM scoring date**: RFM uses 2011-12-10 as the analysis date; scores reflect that point in time only.
+7. **Overlapping return conditions**: Returns/cancellations have overlapping flags; counts are not additive.
 
 ## Reproducibility principles
 
-- Every transformation must have a documented rule.
-- KPI formulas must be explicit.
-- Raw and processed row counts must be reconciled.
-- Cancellations and returns must be handled transparently.
-- Generated datasets and large binary files must not be committed accidentally.
-- README claims must be updated only after the corresponding analysis artifact exists.
+This project follows reproducibility principles:
+
+- **Raw data is never modified**: The raw workbook is read-only.
+- **All transformations are scripted**: Python pipelines generate all outputs.
+- **Generated files are Git-ignored**: Only code and documentation are committed.
+- **Validation is automated**: Each script records validation metrics.
+- **Documentation is versioned**: All documentation is in Git alongside code.
+
+To regenerate all outputs:
+
+```bash
+source .venv/bin/activate
+python python/clean_data.py
+python python/profile_sales.py
+python python/monthly_sales.py
+python python/country_sales.py
+python python/product_sales.py
+python python/customer_sales.py
+python python/rfm_segmentation.py
+python python/rfm_summary.py
+```
 
 ## Attribution
 
-The underlying dataset is provided by the [UCI Machine Learning Repository](https://archive.ics.uci.edu/dataset/352/online+retail). Please consult the original source for its current license and attribution requirements. [web:28]
-
-The code and documentation in this repository are created for educational and portfolio purposes.
+- **Dataset**: UCI Machine Learning Repository, "Online Retail" ([https://archive.ics.uci.edu/dataset/352/online+retail](https://archive.ics.uci.edu/dataset/352/online+retail)).
+- **License**: Dataset is publicly available for research and educational use.
+- **Project**: E-Commerce Customer & Sales Analytics by Rai Ritik.
 
 ## Author
 
 **Rai Ritik**
 
 - GitHub: [@rai-ritik](https://github.com/rai-ritik)
-- Repository: [ecommerce-customer-sales-analytics](https://github.com/rai-ritik/ecommerce-customer-sales-analytics)
+- Location: Trento, Trentino-Alto Adige, Italy
+- Role: Software Developer / Data Science Student
+
+---
+
+**Last updated:** 2026-08-18  
+**Latest commit:** 1223b8d (docs: add Power BI data model and DAX measures documentation)
