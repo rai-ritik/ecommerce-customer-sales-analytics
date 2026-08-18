@@ -1,0 +1,14 @@
+metric,value
+sales_rows,524878
+revenue,10642110.804000001
+units_sold,5572420
+orders,19960
+customers_with_id,4338
+unique_products,3922
+unique_countries,38
+average_order_value,533.1718839679359
+average_order_lines_per_order,26.296492985971945
+repeat_customers,2845
+one_time_customers,1493
+first_transaction_date,2010-12-01 08:26:00
+last_transaction_date,2011-12-09 12:50:00
